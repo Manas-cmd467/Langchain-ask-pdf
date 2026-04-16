@@ -1,17 +1,20 @@
 import streamlit as st
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import FAISS
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationalRetrievalChain
+from langchain_text_splitters import CharacterTextSplitter
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain_classic.memory import ConversationBufferMemory
+from langchain_classic.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
-from langchain.llms import HuggingFaceHub
+from langchain_community.llms import HuggingFaceHub
 
 
 def get_pdf_text(pdf_docs):
     text = ""
+    if not pdf_docs:
+        return text
+
     for pdf in pdf_docs:
         pdf_reader = PdfReader(pdf)
         for page in pdf_reader.pages:
@@ -88,6 +91,10 @@ def main():
         if st.button("Process"):
             with st.spinner("Processing..."):
                 raw_text = get_pdf_text(pdf_docs)
+                if not raw_text.strip():
+                    st.warning("Please upload at least one PDF with extractable text.")
+                    return
+
                 text_chunks = get_text_chunks(raw_text)
                 vectorstore = get_vectorstore(text_chunks)
 
